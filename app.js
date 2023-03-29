@@ -1,15 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
+const fs = require('fs');
 
-// define timeseries data as an array of objects
-const timeseriesData = [
-  { time: new Date("2022-01-01T00:00:00Z"), value: 10 },
-  { time: new Date("2022-01-02T00:00:00Z"), value: 15 },
-  { time: new Date("2022-01-03T00:00:00Z"), value: 20 },
-  { time: new Date("2022-01-04T00:00:00Z"), value: 25 },
-  { time: new Date("2022-01-05T00:00:00Z"), value: 30 },
-];
+
+// read timeseries data from file
+const timeseriesData = JSON.parse(fs.readFileSync('timeseriesData.json'));
 
 // enable CORS protection
 app.use(cors());
@@ -17,12 +13,21 @@ app.use(cors());
 // define endpoint with query parameters "start" and "end"
 app.get('/timeseries', (req, res) => {
   const { start, end } = req.query;
-  const startDate = new Date(start);
-  const endDate = new Date(end);
+  let startDate = new Date(0); // default to the beginning of all time
+  let endDate = new Date(); // default to the current date
+  
+  if (start) {
+    startDate = new Date(start);
+  }
+  
+  if (end) {
+    endDate = new Date(end);
+  }
   
   // filter timeseries data based on start and end dates
   const filteredData = timeseriesData.filter(data => {
-    return data.time >= startDate && data.time <= endDate;
+    const time = new Date(data.time);
+    return time >= startDate && time <= endDate;
   });
   
   res.json(filteredData);
